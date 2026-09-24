@@ -1,0 +1,6 @@
+Seed bag of the Model111 recipe (logit mean), held-fold TS-AUC
+1 seeds: folds 0.6440 0.6072 0.6272 0.6087 0.6297 mean 0.6234
+2 seeds: folds 0.6440 0.6095 0.6275 0.6092 0.6282 mean 0.6237
+3 seeds: folds 0.6449 0.6089 0.6272 0.6098 0.6288 mean 0.6239
+4 seeds: folds 0.6453 0.6090 0.6265 0.6091 0.6294 mean 0.6239
+5 seeds: folds 0.6452 0.6084 0.6265 0.6100 0.6297 mean 0.6240

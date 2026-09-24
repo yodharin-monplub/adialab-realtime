@@ -1,0 +1,12 @@
+lightgbm==4.6.0
+numpy>=1.21.6,<3
+pandas>=1.4.0,<3
+pyarrow>=10
+scipy
+joblib
+scikit-learn>=1.2.0,<1.8
+# Model 6 compares these optional tree backends during model search.  The CPU
+# XGBoost wheel avoids pulling CUDA/NCCL onto machines where the driver probe
+# has already selected CPU execution.
+xgboost-cpu>=2.0,<4
+catboost>=1.2,<2

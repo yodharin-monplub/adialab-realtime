@@ -1,0 +1,1 @@
+"""Compact causal multiscale boosting."""

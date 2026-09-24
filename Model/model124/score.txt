@@ -1,0 +1,8 @@
+Model124 / Submission31 (Submission30 + causal GRU ensemble, 15 numpy GRUs)
+
+Development OOF (5 folds, 8,333 series):  0.638852  (Submission30 0.636904, +0.0019)
+Sealed outer holdout (1,667 series):       0.632221  (Submission30 0.630638, +0.0016; 95% CI [-0.0016, +0.0048])
+CLOUD, public leaderboard (run 117482, submission #5 id 81580->81831, prediction 95502, 2026-09-18 03:34):
+                                           0.630873  (Submission30 0.629568, +0.0013)  rank 115/736
+Duration 16,478 s (4 h 35 m); determinism check passed; inference only.
+Holdout-to-cloud offset -0.0013 (Submission30: -0.0011). Development folds remain ~0.008 optimistic.

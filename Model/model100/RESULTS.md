@@ -1,0 +1,7 @@
+# Model100: maximum-over-tau dependence GLR
+
+Pilot gains: {0.00125: 4.019416384792862e-05, 0.0025: 7.550676078027507e-05, 0.005: 0.00014136224102245798, 0.01: 0.0002547060962245773, 0.02: 0.0003731675118554545, 0.04: 0.0002875666803116017}.
+
+Selected weight: 0.02; continue confirmation: True.
+
+No cloud activity.

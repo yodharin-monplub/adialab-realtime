@@ -1,0 +1,7 @@
+# Model95: maximum-over-tau scale GLR
+
+Pilot gains: {0.00125: 2.6396728838640193e-05, 0.0025: 4.750713288959041e-05, 0.005: 9.338901049149584e-05, 0.01: 0.00015590055646663714, 0.02: 0.00020994696977849614, 0.04: 4.443335756221245e-05}.
+
+Selected weight: 0.02; continue confirmation: True.
+
+No cloud activity.

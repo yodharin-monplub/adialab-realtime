@@ -1,0 +1,28 @@
+Model112 / Submission30 local development TS-AUC (5 held-series folds, 8,333 series)
+
+candidate                                   fold0    fold1    fold2    fold3    fold4    mean
+Submission28 chain (Model73, exact repro)   0.65334  0.61139  0.64437  0.61827  0.64978  0.635429
+Submission30 = chain + 0.5*distilled        0.65633  0.61393  0.64361  0.62042  0.65023  0.636904
+gain                                        +0.0030  +0.0025  -0.0008  +0.0022  +0.0005  +0.001475
+
+Weight 0.5 selected on pilot folds 0-1 (pilot gain +0.00277).
+Confirmation folds 2-4: gain +0.00061, 2/3 wins.
+Best overall weight 0.3-0.4 (+0.0016); protocol keeps 0.5.
+
+Model111 distilled raw component vs Model84 expressive raw component:
+  0.64401/0.60724/0.62722/0.60875/0.62965 (mean 0.62337) vs
+  0.64330/0.59960/0.62164/0.60516/0.62777 (mean 0.61950): +0.00388, 5/5 wins.
+
+Reference: Model26 (cloud 0.62425) local 0.63241 -> cloud offset about -0.008.
+
+CLOUD RESULT (2026-09-16, run 117218, submission #4 id 81580, prediction 95277):
+  public TS-AUC 0.6295676  (+0.00532 vs Model26's 0.6242531)
+  duration 14,153 s (3 h 56 m), determinism check passed, exit 0
+  local 0.636904 -> cloud 0.629568: offset -0.0073 (consistent with Model26's -0.0082)
+
+SEALED OUTER HOLDOUT (Model123, 1,667 untouched series, same bundle):
+  Submission28 0.629689   Submission30 0.630638   (+0.00095)
+  => holdout matches the cloud within 0.001; the dev-fold 0.6369 is optimistic.
+
+Parity (Windows, Python 3.12): streaming vs offline cache max error 3.6e-8;
+chain vs Linux golden 5.8e-8; deterministic replay; incremental; train() data-free.

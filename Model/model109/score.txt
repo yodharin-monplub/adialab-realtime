@@ -1,0 +1,18 @@
+Model109 pilot (raw held-fold TS-AUC, no stack/postprocess, 500k real rows, 4 training folds)
+
+arm    fold0     fold1     mean
+hard   0.632965  0.587304  0.610135
+mix    0.645190  0.589523  0.617357   (+0.007222 vs hard)
+soft   0.641704  0.587234  0.614469
+
+Teacher (future-seeing) TS-AUC on student rows: fold0 0.692-0.717, fold1 0.702-0.732.
+
+Blend into reconstructed Model84 final (z-score blend, weight w on student):
+  fold0 Model84 0.651240 -> mix w=0.75 0.656620 (+0.0054); hard w=0.5 0.654610
+  fold1 Model84 0.616531 -> every student blend loses (w=0.25: mix 0.613940)
+Reason: the students are much weaker than Model84 at online steps >=128 on fold 1
+(raw Model84 expressive component with 40% synthetic splices beats hard student
+by +0.010/+0.012). Follow-up: Model111 (distillation inside the Model84 recipe).
+
+Causal smoothing of the student (EWMA / running-max 128) adds <= +0.001.
+Model84 final OOF reconstructed exactly on Windows: 0.637888 (export_model84_oof.py).
