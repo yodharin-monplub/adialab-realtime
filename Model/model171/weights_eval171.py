@@ -35,7 +35,7 @@ def main():
     for k in range(5):
         m = L.row_fold == k
         student[m] = (lg(np.load(ROOT / f"models/model164/runs/SRP40_fold{k}.npz")["prediction"]) - cb["mu_dist"]) / cb["sd_dist"]
-        files = ([ROOT / f"models/model169/runs/gpu/h256s0_fold{k}_pred.npz"] if SET == "new" else
+        files = ([ROOT / f"models/model170/runs/gpu/all_fold{k}_pred.npz"] if SET == "all" else [ROOT / f"models/model169/runs/gpu/h256s0_fold{k}_pred.npz"] if SET == "new" else
                  [OLD / f"fold{k}_pred.npz", OLD / f"h96l3_fold{k}_pred.npz", OLD / f"h128_fold{k}_pred.npz"])
         gru[m] = np.mean([lg(np.load(f)["prediction"]) for f in files], axis=0)
     gru = (gru - gru.mean()) / gru.std()

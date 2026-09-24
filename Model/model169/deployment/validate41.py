@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[3]
 OUT = ROOT / "models/model169/deployment_validation"
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 16
 BUNDLE = sys.argv[2] if len(sys.argv) > 2 else "submission41"
+GRULOGITS = sys.argv[3] if len(sys.argv) > 3 else "models/model169/data/h256_logits.npy"
 sys.path.insert(0, str(ROOT)); sys.path.insert(1, str(ROOT / "models/model152"))
 
 
@@ -50,7 +51,7 @@ def main():
     bc = oh.bundle_constants(); const = json.loads((ROOT / "models/model112/constants_m147_bag3.json").read_text())
     st = np.load(ROOT / "models/model152/holdout_student_AP3.npz")
     chain = np.load(oh.H / "chain.npy")
-    gru = np.load(ROOT / "models/model169/data/h256_logits.npy")[:5].mean(0)
+    gru = np.load(ROOT / GRULOGITS)[:5].mean(0)
     expected_all = 1 / (1 + np.exp(-((chain - bc["mu_chain"]) / bc["sd_chain"]
                                      + ws * (st["dist"] - const["mu_dist"]) / const["sd_dist"]
                                      + float(gspec["weight_gru"]) * (gru - float(gspec["mu_gru"])) / float(gspec["sd_gru"]))))

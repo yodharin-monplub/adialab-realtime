@@ -22,3 +22,26 @@ Model169 (same seed, size and epochs):
   would take ~6 min per fold but vast.ai credit ran out).
 If the all-series nets win, the final bundle's neural part gets the same
 treatment as its tree part.
+
+RESULT (vast.ai RTX 3090 $0.158/h, 10 runs in ~35 min, instance destroyed;
+the first host sat in "loading" for 25 min and was swapped out)
+  held development fold, dev-only (Model169) -> all-series (this model):
+    fold 0  0.636866 -> 0.637716
+    fold 1  0.595178 -> 0.610761
+    fold 2  0.628359 -> 0.631663
+    fold 3  0.604497 -> 0.609817
+    fold 4  0.620336 -> 0.629898
+    mean    0.617047 -> 0.623971   (+0.0069, 5/5)
+  hidden 384 all-series: mean 0.622368 -> no better than 256.
+-> the neural part was starved of series, not of capacity or targets.
+Model171 weight protocol with these nets: dev blend mean 0.64276 (deployed
+nets 0.64149, Model169 nets 0.64119); pilot-selected ws=1.5 wg=1.0
+(pilot +0.00089, confirm +0.00023); ws=1.0/wg=0.75 was the most robust
+alternative (+0.00082/+0.00044, 5/5).
+SUBMISSION42 = Submission41 with these 5 nets and weight_gru 1.0
+(models/model169/deployment/build41.py with SOURCE/NETSDIR/GRUTAG/WGRU,
+validate41.py with the new logits: parity 1.2e-7, replay 0.0, runtime +1.6%,
+~4.8 cloud hours; sealed as submissions/submission42.zip).
+CAVEAT: these nets trained on the holdout series, so the sealed holdout can no
+longer judge them; the evidence is the 5/5 development-fold win.
+Emailed the user for approval; NOT uploaded.

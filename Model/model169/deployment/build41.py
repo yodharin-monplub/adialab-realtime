@@ -1,4 +1,6 @@
-"""Build Submission41 = sealed Submission40 with the GRU part replaced by the Model169 networks.
+"""Build a bundle whose GRU part is replaced by a newer set of networks (Submission41: Model169 nets; Submission42: the Model170 all-series nets with weight_gru from the Model171 protocol).
+Env: SOURCE (sealed bundle to start from), NETSDIR, GRUTAG, WGRU, DEST.
+
 
 The deployed GRU part is 15 small nets (h192 / h96x3 / h128) trained on the OLD teacher's targets; it scores
 0.61905 on the sealed holdout.  The replacement is 5 nets (hidden 256, 2 layers, one seed x five folds)
@@ -20,9 +22,9 @@ import tempfile
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
-SOURCE = ROOT / "submissions/submission40"
+SOURCE = ROOT / "submissions" / os.environ.get("SOURCE", "submission40")
 DEST = ROOT / "submissions" / os.environ.get("DEST", "submission41")
-NETS = ROOT / "models/model169/runs/gpu"
+NETS = ROOT / os.environ.get("NETSDIR", "models/model169/runs/gpu")
 TAG = os.environ.get("GRUTAG", "h256s0_")
 LAYERS = 2
 
@@ -60,6 +62,8 @@ def main():
         logits.append(np.log(p) - np.log1p(-p))
     z = np.concatenate(logits)
     spec = dict(manifest["model124_gru"])
+    if os.environ.get("WGRU"):
+        spec["weight_gru"] = float(os.environ["WGRU"])
     spec.update(folds=folds, mu_gru=float(z.mean()), sd_gru=float(z.std()),
                 note=f"{DEST.name}: 5 GRU students (hidden 256, 2 layers, one seed x five folds) trained on the "
                      "Model157 oracle-teacher soft targets (Model169, rented RTX 3090); constants are the mean/sd "

@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[3]
 SERVE = ROOT / "models/model147/deployment"
 NAME = sys.argv[1] if len(sys.argv) > 1 else "submission35"
 BUNDLE = ROOT / "submissions" / NAME
-OUTPUT = ROOT / ("models/model169/deployment_validation" if NAME == "submission41" else "models/model154/deployment_validation")
+OUTPUT = ROOT / ("models/model169/deployment_validation" if NAME in ("submission41", "submission42") else "models/model154/deployment_validation")
 ARCHIVE = ROOT / "submissions" / f"{NAME}.zip"
 
 
