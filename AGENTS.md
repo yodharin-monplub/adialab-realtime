@@ -59,7 +59,9 @@ In the root directory, not in any folder, let there be only AGENTS.md
 
 ## Communication method 
 
-i have created a email for you to communicate with me. If you need human input, Sent me an email to yodharinmonplub@actuarialtutor.org For Example, if you need me to point to a direction. I will reply the email or type the prompt. email.txt contains the username and password Email me if you make progress. Please check email every 3 minutes. 
+i have connected you to discord. If you need human input, Sent me a discord message and I will reply.
+For Example, if you need me to point to a direction. I will reply the email or type the prompt.
+Text if you make progress. Please check inbox every 3 minutes. 
 
 ## Try the following for better score 
 
