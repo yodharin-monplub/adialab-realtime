@@ -8,6 +8,13 @@ The target channel id is cached in Other/discord_channel.txt.
   python models/discord_bot.py send message.txt       post a file's text (split at 1,900 chars)
   python models/discord_bot.py say "one line"         post one short line
   python models/discord_bot.py inbox [limit]          show the channel's last messages
+  python models/discord_bot.py authors [limit]        recent human authors + their user ids
+  python models/discord_bot.py dm USER_ID             open a DM with that user and use it
+
+A DM is just another channel id, so once `dm` has stored it, send / say / inbox all work in the DM
+with no further changes. The bot CANNOT discover its own DMs (Discord does not let bots list them) and
+cannot list server members without the GUILD_MEMBERS privileged intent, so the user id has to come from
+somewhere once: `authors` reads it off any message the person posts in a channel the bot can see.
 """
 from __future__ import annotations
 
@@ -102,6 +109,23 @@ def main() -> None:
         return
     if what == "say":
         post(sys.argv[2])
+        return
+    if what == "authors":
+        limit = int(sys.argv[2]) if len(sys.argv) > 2 else 20
+        seen = {}
+        for m in call(f"/channels/{channel()}/messages?limit={limit}"):
+            a = m["author"]
+            if not a.get("bot"):
+                seen[a["id"]] = a.get("global_name") or a.get("username")
+        if not seen:
+            print("no human messages in the last", limit, "- post one line in the channel and retry")
+        for uid, name in seen.items():
+            print(f"{name}  user id {uid}")
+        return
+    if what == "dm":
+        info = call("/users/@me/channels", "POST", {"recipient_id": sys.argv[2].strip()})
+        CHANNEL_FILE.write_text(str(info["id"]), encoding="utf-8")
+        print(f"DM channel {info['id']} opened and stored; send/say/inbox now use it")
         return
     if what == "inbox":
         limit = int(sys.argv[2]) if len(sys.argv) > 2 else 10
