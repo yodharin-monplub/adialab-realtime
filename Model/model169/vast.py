@@ -8,6 +8,8 @@ ALWAYS destroy the instance when the run is done - vast bills by the second.
   python models/model169/vast.py create OFFER_ID      create the instance
   python models/model169/vast.py list                 running instances (id, status, ssh, $/h)
   python models/model169/vast.py ssh ID               print ssh / scp command lines
+  python models/model169/vast.py stop ID               STOP it (GPU billing stops, DISK kept)
+  python models/model169/vast.py start ID              start a stopped instance again
   python models/model169/vast.py destroy ID           DESTROY the instance (billing stops)
 """
 from __future__ import annotations
@@ -95,6 +97,13 @@ def main():
                 k = ROOT / "Other/runpod_key"
                 print(f'ssh -i "{k}" -o StrictHostKeyChecking=no -p {i["ssh_port"]} root@{i["ssh_host"]}')
                 print(f'scp -i "{k}" -o StrictHostKeyChecking=no -P {i["ssh_port"]} <file> root@{i["ssh_host"]}:/workspace/')
+        return
+    if what in ("stop", "start"):
+        # Stopping keeps the instance's DISK (and everything uploaded to it) while the GPU stops being
+        # billed; destroying does not. Added 2026-09-25, when home upstream fell to ~3 MB/min and
+        # re-uploading the 1.6 GB of sequence files would have taken hours.
+        print(call(f"/instances/{ident}/", "PUT", {"state": "stopped" if what == "stop" else "running"}))
+        print(what + "ped" if what == "stop" else "started", ident)
         return
     if what == "destroy":
         print(call(f"/instances/{ident}/", "DELETE", {}))
