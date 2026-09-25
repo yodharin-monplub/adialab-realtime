@@ -3,7 +3,9 @@
 weights_eval172.py prints gains against a reference that itself contains the set being tested, so two
 sets cannot be compared through it.  This prints the absolute five-fold blend mean per (ws, wg) and the
 pilot-selected pair (folds 0-1 pick, folds 2-4 confirm), for every set named on the command line.
-  python models/model172/compare_blends.py all synR [synRS synS synR15 ...]
+  python models/model172/compare_blends.py all synR all+new all+synR
+A name may join several sets with '+': the logits are standardized and averaged, which is how a
+DIVERSE-net ensemble is tested (Model168 only ever measured more nets of the SAME recipe).
 """
 import json
 import sys
@@ -25,6 +27,20 @@ def lg(p):
     return np.log(p) - np.log1p(-p)
 
 
+def gru_vector(name, L):
+    """Logit vector for one net set, or the MEAN of several joined by '+' (a diverse-net ensemble)."""
+    import numpy as np
+    parts = name.split("+")
+    out = np.zeros(L.row_count)
+    for part in parts:
+        pattern = PATHS.get(part, "models/model172/runs/gpu/" + part + "_fold{k}_pred.npz")
+        v = np.empty(L.row_count)
+        for k in range(5):
+            v[L.row_fold == k] = lg(np.load(ROOT / pattern.format(k=k))["prediction"])
+        out += (v - v.mean()) / v.std()          # standardize each set before averaging
+    return out / len(parts)
+
+
 def main(sets):
     L = load_development_layout(ROOT)
     c = json.loads((ROOT / "models/model112/constants.json").read_text())
@@ -36,10 +52,7 @@ def main(sets):
         student[m] = (lg(np.load(ROOT / f"models/model164/runs/SRP40_fold{k}.npz")["prediction"]) - cb["mu_dist"]) / cb["sd_dist"]
     masks = [L.row_fold == k for k in range(5)]
     for name in sets:
-        pattern = PATHS.get(name, "models/model172/runs/gpu/" + name + "_fold{k}_pred.npz")
-        gru = np.empty(L.row_count)
-        for k in range(5):
-            gru[L.row_fold == k] = lg(np.load(ROOT / pattern.format(k=k))["prediction"])
+        gru = gru_vector(name, L)
         gru = (gru - gru.mean()) / gru.std()
         rows = {}
         for ws in (0.5, 1.0, 1.5, 2.0):
