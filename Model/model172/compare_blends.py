@@ -19,7 +19,10 @@ from models.model10.sources import load_development_layout  # noqa: E402
 from tsauc import tsauc  # noqa: E402
 
 PATHS = {"all": "models/model170/runs/gpu/all_fold{k}_pred.npz",
-         "new": "models/model169/runs/gpu/h256s0_fold{k}_pred.npz"}
+         "new": "models/model169/runs/gpu/h256s0_fold{k}_pred.npz",
+         "ext20": "models/model176/runs/gpu/ext20_fold{k}_pred.npz",
+         "ext20s1": "models/model176/runs/gpu/ext20s1_fold{k}_pred.npz",
+         "ctrl": "models/model176/runs/gpu/ctrl_fold{k}_pred.npz"}
 
 
 def lg(p):
