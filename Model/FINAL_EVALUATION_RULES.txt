@@ -1,0 +1,46 @@
+WHICH SUBMISSION COUNTS IN THE FINAL RANKING - checked 2026-09-26
+Sources: docs.crunchdao.com/competitions/competitions/structural-break-real-time(.md),
+/competitions/leaderboard.md, /competitions/leaderboard/duplicate-predictions.md,
+/other/glossary.md, and the CrunchDAO API (competition + project attributes).
+
+DATES
+  Submissions close   2026-10-01 16:00 UTC (API: competition.end)
+  Last quota refresh  2026-09-30 (Wednesday 16:00 UTC); 15 cloud hours per week,
+                      one Submission42-type run takes ~4.8 h
+  Final evaluation    end of October 2026, on the PRIVATE test set (10,000 series,
+                      cloud only); winners announced 26-28 October
+
+WHO IS RANKED
+  "If you participate as a team, only the team leader will be ranked on the
+  leaderboard, rewards are split among all members."
+  Our team "godallah" (id 546) has two projects:
+    minimum-mantis     YODHARIN key, user 13209, TEAM LEADER  <- the ranked one
+    sympathetic-trout  KRITTANUT key, user 4770, not leader
+  -> Any upload meant to change our ranking must go to MINIMUM-MANTIS.
+
+IS A SELECTION NEEDED?  No.
+  The glossary says code "or selection" is frozen in the out-of-sample phase, and
+  every project has a `selected` attribute - but this competition has
+  projectSelectionLimit = None, and `selected` is None on both our projects (as it
+  is for everyone). There is nothing to select.
+  The docs do not say whether the private run uses the LATEST or the BEST
+  submission. On minimum-mantis Submission42 (#83777) is BOTH our latest and our
+  best, so either rule picks it. Keep it that way: never upload anything weaker to
+  minimum-mantis after it.
+
+DUPLICATE PREDICTIONS - the one real trap
+  Models whose predictions are > 95% Spearman-correlated, grouped by user AND by
+  team, are paired; "the best model in a pair is always kept. Other models are
+  treated as copies" and are INELIGIBLE FOR PRIZES. (The threshold can change at
+  the organizers' discretion.)
+  Today the leaderboard shows duplicate = False for both our projects, and the
+  leader outscores sympathetic-trout (0.636670 vs 0.633111).
+  DANGER: if sympathetic-trout ever held a correlated submission that scored
+  HIGHER than the leader's, the LEADER would be the copy and lose eligibility.
+  -> Do not upload to sympathetic-trout any more. It is not ranked anyway, so it
+     can only ever hurt us. If a better model exists, it goes to minimum-mantis.
+
+ELIGIBILITY CHECKLIST (all true for Submission42)
+  - training code shipped inside the bundle (training_code/, 47 entries)
+  - deterministic: replay difference 0.0 (validation_submission42.json)
+  - runtime within 15 h/week (~4.8 h)

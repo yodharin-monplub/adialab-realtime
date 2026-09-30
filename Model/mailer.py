@@ -16,8 +16,20 @@ import ssl
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-TO = "yodharinmonplub@actuarialtutor.org"   # AGENTS.md 2026-09-20 (was the gmail address)
-OLD_TO = "yodharinmonplub@gmail.com"        # replies from the old address are still read
+
+
+def _env(name: str) -> str:
+    """Recipient addresses live in the (untracked) .env, never in the code - this repo may go public."""
+    for env in (ROOT / "Other/.env", ROOT / ".env"):
+        if env.exists():
+            for line in env.read_text(encoding="utf-8", errors="replace").splitlines():
+                if line.startswith(name + "="):
+                    return line.split("=", 1)[1].strip().strip('"')
+    raise SystemExit(f"{name} is not set in Other/.env")
+
+
+TO = _env("MAIL_TO")                # the user's address (AGENTS.md)
+OLD_TO = _env("MAIL_OLD_TO")        # replies from an older address are still read
 
 
 def credentials():

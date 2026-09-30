@@ -1,0 +1,89 @@
+HOW SUBMISSION42 IS BUILT AND HOW TO REBUILD IT
+Written 2026-09-25. Replaces PIPELINE_SUBMISSION31.txt (that one describes the
+older three-part blend and is kept for history).
+
+0. WHAT IT SCORED
+   submissions/submission42.zip
+     sha256 eab2ad98abb942a2cc7204286f13736d27cd84bc488e4ecc1fd94399b66bb8cc
+     129,022,887 bytes, 176 files (verified again 2026-09-25 after the project
+     folder was moved - unchanged)
+   Uploaded on the YODHARIN account (project minimum-mantis) as submission
+   #83777, cloud run 120196, finished 2026-09-25 04:08.
+   PUBLIC TS-AUC 0.636670, rank 86 of 767.
+   Read it again with:  python models/run_score_any.py 120196 yodharin
+
+1. WHAT THE MODEL IS (three parts, blended on z-scores)
+   score = z(chain) + 1.5 * z(student) + 1.0 * z(nets)
+   Weights come from the Model148 protocol (pilot folds 0-1 choose, folds 2-4
+   confirm), last re-checked in Model171 with these exact components.
+
+   a) CHAIN - unchanged since Submission28. 31 detector-bank LightGBM models +
+      5 core voters + ExtraTrees + RandomForest -> 34 primitive probabilities ->
+      a logistic stack ("m9") -> rolling max over 128 steps -> 10% of a compact
+      154-feature model ("m11").  Serving: solution73.py, solution26.py,
+      primitive_runtime.py, compact_runtime.py.  TRAINED ON DEVELOPMENT SERIES
+      ONLY (the one part never given all-series training).
+   b) STUDENT - the strong part. LightGBM, 317 causal columns + 27 split-test
+      columns, trained on soft targets 0.5*y + 0.5*oracle-teacher, on ALL 10,000
+      labelled series, with 40% of the weight on synthetic rows: the 1,000
+      deployed splices per fold plus THREE pooled re-cut sets ("", _s148, _s149).
+      Offline: models/model154/run_all.py arm AP1.  Serving: solution147.py +
+      split_tests_numpy.py.
+   c) NETS - 5 GRUs (hidden 256, 2 layers, one seed x five folds), 102 inputs
+      (61 whitening + 40 detector columns + log1p t), trained on all 10,000
+      series with the same oracle soft targets.  Offline: models/model170
+      (build_all_sequences.py then models/model172/train_gpu2.py on a rented
+      GPU).  Serving: gru_numpy.py, solution124.py.
+
+2. REBUILDING THE BUNDLE FROM A SEALED PARENT
+   SOURCE=submission41 NETSDIR=models/model170/runs/gpu GRUTAG=all_ WGRU=1.0 \
+   DEST=submission42 python models/model169/deployment/build41.py
+   then  python models/model169/deployment/validate41.py 16 submission42
+   Validation receipts: models/model154/deployment_validation/
+     validation_submission42.json  parity vs offline 1.2e-7,
+                                   deterministic replay 0.0,
+                                   estimated cloud hours 4.78
+     package_submission42.json     archive hash and file count
+   Upload (ONLY with the user's explicit word):
+     python models/model154/deployment/push42y.py --push
+     python models/model154/deployment/start_cloud42y.py
+
+3. PRIZE ELIGIBILITY
+   The rules say a pre-trained model without its training code is ineligible.
+   submission42.zip contains training_code/ (47 entries) with the offline
+   training scripts and tsauc.py.  Re-check with:
+     python -c "import zipfile;z=zipfile.ZipFile('submissions/submission42.zip');
+     print(sum(1 for n in z.namelist() if 'training_code' in n))"
+
+4. HOW TO JUDGE A CHANGE (do not skip this)
+   - Dev folds are ~0.006 OPTIMISTIC: 100+ models were selected on them.
+   - The sealed outer holdout (1,667 series) matches the cloud within ~0.0014,
+     and is the go/no-go test - EXCEPT for the nets and the student since
+     Model154/170, which train on the holdout series, so for those judge on the
+     dev folds and the public score.
+   - Rule for any arm: gain > 2 standard errors AND >= 4 of 5 folds.
+   - Precedent for why the rule is strict: Submission34 gained +0.0013 on dev,
+     5/5, and LOST 0.0009 on the holdout.
+   - Any single-fold gain above about +0.01 is a suspected LEAK. One was found
+     on 2026-09-25: spliced series tagged by plan index pass the "not my fold"
+     test for every plan but their own (see models/model172/readme.txt and
+     split_splices.py).
+
+5. LEVERS ALREADY MEASURED AND CLOSED (do not redo)
+   Student: more re-cut sets beyond three (Model163), extra splice sets (165),
+     stitch rows (167), bagging after pooling (166), mirrored re-cut set pooled
+     in (174, +0.0004 at 1.7 s.e.), evidence-over-tau features (149), 2025
+     external data as rows (145), ranker objective (146), 500-feature and
+     moment/Fourier banks (114/133), bootstrap and parametric synthetic series
+     (134/135).
+   Nets: bigger ensembles (168 - saturates after ~3 nets), more seeds (169),
+     more capacity h384 (169), longer training 36/48 epochs (172), re-cut
+     sequences at 40% and 15%, spliced sequences, both together, and mirrored
+     real series (172/173) - all inside noise or negative; diverse-net
+     averaging across those sets (172/compare_blends.py, best +0.00008).
+   Blend: weight grids (148/171), time-varying weights and post-processing
+     sweeps (14/142), dropping the chain (costs -0.0033, so it stays).
+   ONLY UNTRIED STRUCTURAL LEVER: give the chain (1a) all-series training.
+   Estimated 8-14 h of CPU on Model5/Model6-era code whose outputs the bundle
+   verifies by hash; the chain is the lowest-weighted part. Judged a poor bet on
+   2026-09-25 and NOT attempted.

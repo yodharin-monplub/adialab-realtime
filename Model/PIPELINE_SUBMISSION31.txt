@@ -1,0 +1,156 @@
+HOW A PREDICTION IS CREATED - Submission31, code level
+(bundle: submissions/submission31/, public 0.6309)
+
+All file names below are inside that folder.
+
+0. ENTRY POINT
+   main.py
+     train(): only checks the bundled files (sha256).
+              Nothing is trained in the cloud.
+     infer(): calls solution124.infer(datasets, dir)
+
+   solution124.infer():
+     bundle = Bundle(dir)      # loads every model once
+     for (history, online) in datasets:
+         p = SeriesPredictor(bundle, history)
+         for value in online:
+             yield p.step(value)   # one probability
+                                   # per online point
+   Strictly causal: step(value) sees the history and
+   the online points up to now, nothing later.
+
+1. WHAT IS BUILT ONCE PER SERIES (from the history)
+   SeriesPredictor.__init__  (solution73.py)
+   a) detector = CoreStreamDetector(history, banks)
+      feature_pipeline.py + detector/core/*.py +
+      detector/candidate/*.py
+      31 "banks" (d1, d2, ... d66) of streaming change
+      detectors: CUSUM up/down, z / z^2 / |z| over
+      windows 8..512 and the whole prefix, window
+      mean/var/rank, likelihood ratios, quantile-cell
+      counts, Haar, etc. All referenced to the history.
+      Output per step: ONE ROW OF 4,741 NUMBERS.
+   b) white = StreamingWhitening(history)
+      incremental_whitening.py, model73_whitening.py
+      Fits AR(p) on the history (p in 0,1,2,4,8,12 by
+      BIC), EWMA variance (lambda .97), maps residuals
+      through the history's empirical CDF to Gaussian.
+      7 channels (location, squared, absolute, lag1,
+      tail_up, tail_down, abs_change) x 7 windows
+      (16..512 + prefix) + 7 max-abs + 5 history
+      context numbers = 61 NUMBERS per step.
+   c) compact = StreamingFeatures(history)
+      compact_features.py: 4 channels (level,
+      difference, AR residual, cdf) x 6 windows x 6
+      statistics + 10 context = 154 numbers per step.
+   d) gru_states: a zero hidden state for each of
+      the 15 GRUs.
+
+2. ONE STEP: step(value)   (solution124.py, line 87)
+
+   row   = detector.step(value)     # 4,741 floats
+   white = self.white.step(value)   # 61 floats
+   (NaN -> 0, clipped to +/-1e6)
+
+   2a. LEVEL 1 - 34 primitive probabilities
+       bundle.primitive_probabilities(row, white)
+       (solution73.py line 54)
+       * 31 detector-bank models: one LightGBM file
+         (detectors/native_ensemble.txt) holding 5
+         fold voters per bank; each bank model sees
+         only its own bank's columns.
+         5 voters -> mean of logits -> 1 prob per bank.
+       * core component: 5 LightGBM voters
+         (model73_lightgbm/fold_k.txt), each on 256
+         selected detector columns + the 61 whitening
+         columns = 317 inputs. Logit-mean of the 5.
+       * ExtraTrees component (512 columns) and
+         RandomForest component (512 columns),
+         stored as compact forests (compact_runtime).
+       => vector of 34 probabilities.
+
+   2b. LEVEL 2 - the stack ("m9")
+       margin9 = logit(p34) @ coefficient
+       (stack_coefficients.npz: 34 weights of a
+        logistic regression fitted on out-of-fold
+        predictions)
+
+   2c. ROLLING MAX (the only memory in the chain)
+       current     = margin9
+       peak        = max of margin9 over the last
+                     128 steps (deque self.peaks)
+       transformed = current + 0.1*(peak - current)
+
+   2d. COMPACT MODEL ("m11")
+       compact_row = compact.update(value)  # 154
+       p11 = logit-mean of 5 LightGBM models
+             (compact/fold_k.txt)
+       combined = 0.9*transformed + 0.1*logit(p11)
+       ==> this is the Submission28 "chain"
+           = 0.81*m9 + 0.09*rollmax128(m9) + 0.10*m11
+
+   2e. DISTILLED STUDENT (added in Submission30)
+       bundle.distilled_probability(row, white)
+       (solution112.py line 64)
+       5 LightGBM voters (model112_distilled/
+       fold_k.txt, 1000 trees, 63 leaves), same 317
+       inputs as the core voters, but TRAINED ON SOFT
+       TARGETS 0.5*label + 0.5*teacher, where the
+       teacher saw the future of the series.
+       distilled = logit(logit-mean of the 5)
+
+   2f. GRU STUDENT (added in Submission31)
+       x = [61 whitening, 40 best detector columns,
+            log(1+t)] standardized, clipped +/-10,
+            rounded to float16        (102 inputs)
+       15 GRUs (3 sizes x 5 folds: hidden 192/2
+       layers, 96/3, 128/2), pure numpy (gru_numpy.py),
+       each keeps its own hidden state per series.
+       gru_logit = mean of the 15 logits
+
+   2g. FINAL BLEND (z-scores with frozen constants
+       from resources/manifest.json)
+       score = (combined  - mu_chain)/sd_chain
+             + 0.5*(distilled - mu_dist)/sd_dist
+             + 0.5*(gru_logit - mu_gru )/sd_gru
+       return sigmoid(score)
+
+       mu_chain -0.144 sd_chain 0.561
+       mu_dist  -0.616 sd_dist  0.928
+       mu_gru   -0.194 sd_gru   0.594
+
+3. HOW THE MODELS WERE TRAINED (offline, not in cloud)
+   * 8,333 development series in 5 series-level folds;
+     1,667 series sealed as the outer holdout.
+   * Every level is fitted out-of-fold: bank models ->
+     OOF probabilities -> stack coefficients -> blend
+     weights chosen on folds 0-1, confirmed on 2-4,
+     then one check on the sealed holdout.
+   * Training rows: 400k sampled real rows + 1,000
+     spliced series per fold (history and pre-break of
+     series A + real post-break tail of series B) at
+     40% of the weight. Row weights mimic the metric
+     (pairs of positive/negative rows at the same step).
+   * The cloud runs 5 fold voters of each model and
+     averages their logits (no refit on all data).
+
+4. SCORES ALONG THE CHAIN (sealed holdout / public)
+   chain (2a-2d)        0.6297 / 0.6243
+   + distilled (2e)     0.6306 / 0.6296
+   + GRU (2f)           0.6322 / 0.6309
+
+5. WHERE IT IS WEAK (fold 0, AUC by online step)
+   t < 16      0.565      128-256   0.634
+   16-64       0.573      256-512   0.680
+   64-128      0.608      >= 512    0.714
+   Almost all features are window statistics, so the
+   score needs many post-break points before it moves.
+
+CORRECTION to my mail of 02:23: the raw-series network's
+"0.618 after one epoch" was wrong. The model had a leak
+(a normalization layer averaged over the whole time
+axis, so every step saw the future). After the fix it
+scores 0.52-0.54 after 4 epochs: not learning yet.
+Nothing from it is in any submission.
+
+- Claude

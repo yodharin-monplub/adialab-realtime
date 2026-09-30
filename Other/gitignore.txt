@@ -1,0 +1,47 @@
+# Exclude file for the GitHub backup (core.excludesFile, so the project root keeps holding
+# only AGENTS.md as AGENTS.md requires).  WHITELIST: back up source and documentation only,
+# never data, caches, model dumps, bundles or credentials.
+
+# 1. ignore everything, but keep descending into directories
+*
+!*/
+
+# 2. what we DO back up
+!*.py
+!*.md
+!readme.txt
+!score.txt
+!*.ps1
+!*.sh
+!*.cfg
+!*.toml
+!requirements*.txt
+# named documentation files that are not called readme.txt (added 2026-10-01 - they were being
+# silently dropped by rule 1; personal email_*.txt files stay excluded)
+!PIPELINE_SUBMISSION*.txt
+!FINAL_EVALUATION_RULES.txt
+!TRAINING_README.txt
+!readme_submission.txt
+
+# 3. never, even if they match the rules above
+/models/
+/train/
+/submissions/
+/.venv/
+/.claude/
+/Data/
+/Other/.venv/
+/Other/submissions/
+**/data/
+**/runs/
+**/cache/
+**/remote_runs/
+**/data_white/
+**/runs_white/
+**/deployment_validation/
+__pycache__/
+.env
+Other/.env
+Other/*key*
+Other/email.txt
+Other/discord.txt
