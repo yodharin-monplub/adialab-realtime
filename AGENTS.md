@@ -60,8 +60,9 @@ In the root directory, not in any folder, let there be only AGENTS.md
 ## Communication method 
 
 i have connected you to discord. If you need human input, Sent me a discord message and I will reply.
-For Example, if you need me to point to a direction. I will reply the email or type the prompt.
-Text if you make progress. Please check inbox every 3 minutes. 
+For Example, if you need me to point to a direction. I will reply the DM or type the prompt.
+Text if you make progress. Please check DM every 3 minutes.
+My discord user is: yodharin
 
 ## Try the following for better score 
 
