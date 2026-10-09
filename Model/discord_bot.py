@@ -35,9 +35,9 @@ def token() -> str:
     for env in (ROOT / "Other/.env", ROOT / ".env"):
         if env.exists():
             for line in env.read_text(encoding="utf-8", errors="replace").splitlines():
-                if line.strip().startswith("Discord_RNSA_BOT") and "=" in line:
+                if (line.strip().startswith("Discord_RNSA_BOT") or line.strip().startswith("DISCORD_BOT")) and "=" in line:
                     return line.split("=", 1)[1].strip().strip('"')
-    raise SystemExit("Discord_RNSA_BOT not found in Other/.env")
+    raise SystemExit("Discord_RNSA_BOT / DISCORD_BOT not found in Other/.env")
 
 
 def call(path: str, method: str = "GET", body: dict | None = None):

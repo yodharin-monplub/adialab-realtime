@@ -25,7 +25,7 @@ ACCOUNTS = {"krittanut": ("CRUNCH_API_KEY_KRITTANUT", "sympathetic-trout"),
 def main(run_id: int, account: str = "krittanut"):
     logging.disable(logging.CRITICAL)
     keyname, project_name = ACCOUNTS[account]
-    env = dotenv_values(ROOT / ".env")
+    env = dotenv_values(ROOT / "Other/.env") if (ROOT / "Other/.env").exists() else dotenv_values(ROOT / ".env")
     client = Client.from_env(auth=auth.ApiKeyAuth(env[keyname]), show_progress=False)
     project = client.competitions.get("structural-break-real-time").projects.get(
         project_identifier=project_name)

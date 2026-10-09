@@ -1,0 +1,16 @@
+Model177 / Submission43 (Submission42 + float32 lattice gate)
+
+LOCAL, 100 reduced test series (validate177.py 100, 50,983 online steps, y_test.reduced truth):
+  Submission42  TS-AUC 0.583984   (853 s single process)
+  Submission43  TS-AUC 0.610763   (859 s)            delta +0.026779
+  The local set holds 2 lattice series out of 100 (2%), both with a break, so this delta overstates
+  the expected gain; the training-set simulation (1.26% lattice series, 64/126 with a break) gives
+  about +0.0086 at a 0.635 base.
+  98 non-lattice series: scores bit-identical to Submission42.
+  Lattice series 10044: break at online step 129, gate fires at 129 (score <= 0.0096 before, 1.0 after).
+  Lattice series 10079: break at online step 638, gate fires at 638.
+
+TRAINING SET (scan177.py train): 126 lattice series, rule auto: 57/64 breaks caught exactly at tau,
+  7 within 5 steps, none early, 0 false alarms on 62 break-free lattice series.
+
+CLOUD (hidden late-submission leaderboard): not run yet - awaiting the user's permission.

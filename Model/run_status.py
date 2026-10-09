@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main(run_id: int):
     logging.disable(logging.CRITICAL)
-    env = dotenv_values(ROOT / ".env")
+    env = dotenv_values(ROOT / "Other/.env") if (ROOT / "Other/.env").exists() else dotenv_values(ROOT / ".env")
     key = env.get("CRUNCH_API_KEY_KRITTANUT") or env.get("CRUNCH_API_KEY")
     client = Client.from_env(auth=auth.ApiKeyAuth(key), show_progress=False)
     project = client.competitions.get("structural-break-real-time").projects.get(
